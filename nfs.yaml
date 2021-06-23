@@ -1,0 +1,33 @@
+---
+  - name: "Configure NFS"
+    hosts: all
+    become: true
+    tasks:
+
+      - name: nfs install
+        yum: name={{ item }} state=installed
+        with_items:
+          - nfs-utils
+          - rpcbind
+          - nfs-utils-lib
+
+      - name: Start NFS service
+        service: name={{ item }} 
+          enabled=yes 
+          state=started
+        with_items:
+         - nfs-server
+         - rpcbind
+         - nfslock 
+
+      - name: Create a mountable directory 
+        file:
+          path: /EM
+          state: directory
+          mode: '0775'
+  
+      - file: path=/EM/FTP/sys_master state=directory mode=0755 owner=600 group=600
+        run_once: true
+
+      - name: Copy NFS "conf" configuration file
+        copy: src=exports dest=/etc/
